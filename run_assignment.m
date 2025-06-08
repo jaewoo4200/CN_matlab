@@ -80,6 +80,19 @@ for pm = 1:length(prbModes)
     legend; grid on;
 end
 
+%% Part 5: Frequency comparison (850MHz, 1.9GHz, 28GHz)
+freqs = [0.85 1.9 28];
+labels = {'850MHz','1.9GHz','28GHz'};
+colors = lines(length(freqs));
+figure; hold on;
+for f = 1:length(freqs)
+    r = simulateScheduler(numUsers, 256, prbMode, speed, T, 'basic', 0, freqs(f));
+    plot(r.cellBits, 'Color', colors(f,:), 'DisplayName', labels{f});
+end
+xlabel('TTI'); ylabel('Cumulative Bits');
+title('Frequency Comparison (30 users)');
+legend; grid on;
+
 %% Example Graph Set for one scenario
 res = simulateScheduler(numUsers, 256, prbMode, speed, T, 'basic', 0);
 

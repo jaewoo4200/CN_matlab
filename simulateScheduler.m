@@ -1,4 +1,4 @@
-function results = simulateScheduler(numUsers, t_w, prbMode, speedKmph, totalTime, schedulerType, minRate)
+function results = simulateScheduler(numUsers, t_w, prbMode, speedKmph, totalTime, schedulerType, minRate, freqGHz)
 %SIMULATESCHEDULER Simulate a simple cellular scheduler.
 %
 %   RESULTS = SIMULATESCHEDULER(NUMUSERS, T_W, PRBMODE, SPEEDKMPH, TOTALTIME,
@@ -17,8 +17,13 @@ PRB_BW = 180e3;          % Bandwidth of one PRB (Hz)
 TTI = 1e-3;              % Slot duration (s)
 cellRadius = 250;        % Cell radius (m)
 noisePower = 1e-13;      % Noise power (W)
+txPower = 20;            % 43 dBm ~ 20 W
 numPRB = prbMode;        % Available PRBs per TTI
 userSpeed = speedKmph / 3.6;  % Speed in m/s
+
+if nargin < 8
+    freqGHz = 1.9;       % default 1.9 GHz if not specified
+end
 
 % Initialization
 positions = (rand(numUsers,1) * cellRadius).*exp(1j*2*pi*rand(numUsers,1));
@@ -40,10 +45,11 @@ for t = 1:totalTime
 
     % Channel effects
     d = abs(positions);
-    pathloss = (d + 1).^(-3);             % simple distance loss
-    shadow = 10.^(0.1*randn(numUsers,1)); % log-normal shadowing
-    fading = (raylrnd(1,numUsers,1)).^2;  % Rayleigh power
-    sinr = pathloss .* shadow .* fading * 10 ./ noisePower;
+    plLin = pathLossModel(d, freqGHz);
+    shadow = 10.^(0.1*randn(numUsers,1));    % log-normal shadowing
+    fading = (raylrnd(1,numUsers,1)).^2;     % Rayleigh power
+    rxPower = txPower * plLin .* shadow .* fading;
+    sinr = rxPower ./ noisePower;
 
     instRate = numPRB * PRB_BW * log2(1 + sinr); % bps
 
@@ -102,5 +108,31 @@ results.bits = bitHistory;
 results.cumBits = cumBits;
 results.cellBits = cellBits;
 results.avgRate = avgRate;
+end
+
+function pl = pathLossModel(d, freqGHz)
+%PATHLOSSMODEL Return linear path loss for distance d (m) at freqGHz.
+h_bs = 30;       % base station height (m)
+h_ms = 1.5;      % mobile height (m)
+
+switch round(freqGHz*10)/10
+    case 0.8
+        fMHz = 850;
+        a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
+        pl_dB = 69.55 + 26.16*log10(fMHz) - 13.82*log10(h_bs) - a + ...
+            (44.9 - 6.55*log10(h_bs))*log10(d/1000);
+    case 1.9
+        fMHz = 1900;
+        a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
+        pl_dB = 46.3 + 33.9*log10(fMHz) - 13.82*log10(h_bs) - a + ...
+            (44.9 - 6.55*log10(h_bs))*log10(d/1000) + 3;
+    otherwise
+        fc = freqGHz;
+        pl_los = 28 + 22*log10(d) + 20*log10(fc);
+        pl_nlos = 13.54 + 39.08*log10(d) + 20*log10(fc) - 0.6*(h_bs - 1.5);
+        pl_dB = max(pl_los, pl_nlos);
+end
+
+pl = 10.^(-pl_dB/10);
 end
 
