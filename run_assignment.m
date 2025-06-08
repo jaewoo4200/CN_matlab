@@ -52,6 +52,19 @@ legend; grid on;
 xlabel('TTI'); ylabel('Cumulative Bits');
 title('Cell Throughput: Basic vs Modified PFRS (30 users)');
 
+% Additional comparison graphs
+figure;
+bar([resBasic.throughput resMod.throughput]);
+legend('Basic','Modified');
+xlabel('User'); ylabel('Average Throughput (bps)');
+title('User Throughput: Basic vs Modified'); grid on;
+
+figure;
+bar([resBasic.fairness resMod.fairness]);
+set(gca,'XTickLabel',{'Basic','Modified'});
+ylabel('Jain Fairness');
+title('Fairness: Basic vs Modified'); grid on;
+
 %% Part 3: Scheduler with minimum required rate 128 kbps
 minRate = 128e3; % bps
 resMin = simulateScheduler(numUsers, 256, prbMode, speed, T, 'minrate', minRate);

@@ -54,25 +54,30 @@ for t = 1:totalTime
     instRate = numPRB * PRB_BW * log2(1 + sinr); % bps
 
     % Scheduler
-    switch schedulerType
-        case 'basic'
-            weight = instRate ./ max(avgRate,eps);
-            [~,idx] = max(weight);
-        case 'modified'
-            weight = sqrt(instRate ./ max(avgRate,eps));
-            [~,idx] = max(weight);
-        case 'minrate'
-            below = avgRate < minRate;
-            if any(below)
-                candidates = find(below);
-                [~,k] = max(instRate(candidates));
-                idx = candidates(k);
-            else
+    if t_w == 0
+        % Instantaneous-rate scheduling when no averaging window is used
+        [~, idx] = max(instRate);
+    else
+        switch schedulerType
+            case 'basic'
                 weight = instRate ./ max(avgRate,eps);
                 [~,idx] = max(weight);
-            end
-        otherwise
-            error('Unknown scheduler type');
+            case 'modified'
+                weight = sqrt(instRate ./ max(avgRate,eps));
+                [~,idx] = max(weight);
+            case 'minrate'
+                below = avgRate < minRate;
+                if any(below)
+                    candidates = find(below);
+                    [~,k] = max(instRate(candidates));
+                    idx = candidates(k);
+                else
+                    weight = instRate ./ max(avgRate,eps);
+                    [~,idx] = max(weight);
+                end
+            otherwise
+                error('Unknown scheduler type');
+        end
     end
 
     selectedHistory(t) = idx;
@@ -81,8 +86,10 @@ for t = 1:totalTime
     bitHistory(idx,t) = instRate(idx)*TTI;
 
     % Update averages
-    avgRate = avgRate - avgRate/t_w;
-    avgRate(idx) = avgRate(idx) + instRate(idx)/t_w;
+    if t_w > 0
+        avgRate = avgRate - avgRate/t_w;
+        avgRate(idx) = avgRate(idx) + instRate(idx)/t_w;
+    end
 
     % Cumulative counters
     if t==1
