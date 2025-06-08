@@ -5,7 +5,7 @@ This repository contains MATLAB scripts for a cellular network simulation used i
 ## Files
 
 - `simulateScheduler.m` – core function implementing a simple PFRS scheduler with options for modifications, minimum-rate enforcement, and selectable carrier frequency.
-- `run_assignment.m` – example script that runs all required scenarios and produces the requested graphs, including a comparison across 850 MHz, 1.9 GHz and 28 GHz channels.
+- `run_assignment.m` – example script that runs all required scenarios and produces the requested graphs. It includes a comparison across 850 MHz, 1.9 GHz and 28 GHz and generates the full graph set for each frequency.
 
 ## Usage
 
@@ -15,4 +15,4 @@ Open MATLAB in this directory and run:
 run run_assignment
 ```
 
-The script will execute simulations for different configurations and display the graphs.
+The script will execute simulations for different configurations and display the graphs, including sets of plots for each carrier frequency.

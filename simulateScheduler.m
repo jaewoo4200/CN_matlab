@@ -112,25 +112,30 @@ end
 
 function pl = pathLossModel(d, freqGHz)
 %PATHLOSSMODEL Return linear path loss for distance d (m) at freqGHz.
+% Uses Okumura-Hata for 850 MHz, COST231-HATA for 1.9 GHz (urban), and
+% 3GPP TR38.901 UMa NLOS for other frequencies (e.g. 28 GHz).
+
 h_bs = 30;       % base station height (m)
 h_ms = 1.5;      % mobile height (m)
 
-switch round(freqGHz*10)/10
-    case 0.8
-        fMHz = 850;
-        a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
-        pl_dB = 69.55 + 26.16*log10(fMHz) - 13.82*log10(h_bs) - a + ...
-            (44.9 - 6.55*log10(h_bs))*log10(d/1000);
-    case 1.9
-        fMHz = 1900;
-        a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
-        pl_dB = 46.3 + 33.9*log10(fMHz) - 13.82*log10(h_bs) - a + ...
-            (44.9 - 6.55*log10(h_bs))*log10(d/1000) + 3;
-    otherwise
-        fc = freqGHz;
-        pl_los = 28 + 22*log10(d) + 20*log10(fc);
-        pl_nlos = 13.54 + 39.08*log10(d) + 20*log10(fc) - 0.6*(h_bs - 1.5);
-        pl_dB = max(pl_los, pl_nlos);
+if abs(freqGHz - 0.85) < 0.1
+    % Okumura-Hata @ 850 MHz
+    fMHz = 850;
+    a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
+    pl_dB = 69.55 + 26.16*log10(fMHz) - 13.82*log10(h_bs) - a + ...
+        (44.9 - 6.55*log10(h_bs))*log10(d/1000);
+elseif abs(freqGHz - 1.9) < 0.1
+    % COST231-HATA (urban) @ 1.9 GHz
+    fMHz = 1900;
+    a = (1.1*log10(fMHz) - 0.7)*h_ms - (1.56*log10(fMHz) - 0.8);
+    pl_dB = 46.3 + 33.9*log10(fMHz) - 13.82*log10(h_bs) - a + ...
+        (44.9 - 6.55*log10(h_bs))*log10(d/1000) + 3;
+else
+    % 3GPP TR38.901 UMa NLOS
+    fc = freqGHz;
+    pl_los = 28 + 22*log10(d) + 20*log10(fc);
+    pl_nlos = 13.54 + 39.08*log10(d) + 20*log10(fc) - 0.6*(h_bs - 1.5);
+    pl_dB = max(pl_los, pl_nlos);
 end
 
 pl = 10.^(-pl_dB/10);

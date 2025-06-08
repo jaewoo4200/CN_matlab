@@ -93,27 +93,29 @@ xlabel('TTI'); ylabel('Cumulative Bits');
 title('Frequency Comparison (30 users)');
 legend; grid on;
 
-%% Example Graph Set for one scenario
-res = simulateScheduler(numUsers, 256, prbMode, speed, T, 'basic', 0);
+%% Example Graph Set for each frequency
+for f = 1:length(freqs)
+    res = simulateScheduler(numUsers, 256, prbMode, speed, T, 'basic', 0, freqs(f));
 
-figure; plot(res.selected); xlabel('TTI'); ylabel('Selected User');
-title('Selected user vs time'); grid on;
+    figure; plot(res.selected); xlabel('TTI'); ylabel('Selected User');
+    title(['Selected user vs time - ' labels{f}]); grid on;
 
-figure; imagesc(res.prb); xlabel('TTI'); ylabel('User'); colorbar;
-title('PRB allocation');
+    figure; imagesc(res.prb); xlabel('TTI'); ylabel('User'); colorbar;
+    title(['PRB allocation - ' labels{f}]);
 
-figure; plot(res.rate'); xlabel('TTI'); ylabel('Instantaneous Rate (bps)');
-title('User bit rate vs time'); grid on;
+    figure; plot(res.rate'); xlabel('TTI'); ylabel('Instantaneous Rate (bps)');
+    title(['User bit rate vs time - ' labels{f}]); grid on;
 
-figure; plot(res.bits'); xlabel('TTI'); ylabel('Bits per TTI');
-title('User bits vs time'); grid on;
+    figure; plot(res.bits'); xlabel('TTI'); ylabel('Bits per TTI');
+    title(['User bits vs time - ' labels{f}]); grid on;
 
-figure; plot(res.cumBits'); xlabel('TTI'); ylabel('Cumulative Bits');
-title('Cumulative bits per user'); grid on;
+    figure; plot(res.cumBits'); xlabel('TTI'); ylabel('Cumulative Bits');
+    title(['Cumulative bits per user - ' labels{f}]); grid on;
 
-figure; plot(res.cellBits); xlabel('TTI'); ylabel('Cumulative Cell Bits');
-title('Cell cumulative bits'); grid on;
+    figure; plot(res.cellBits); xlabel('TTI'); ylabel('Cumulative Cell Bits');
+    title(['Cell cumulative bits - ' labels{f}]); grid on;
 
-figure; bar(res.throughput); xlabel('User'); ylabel('Average Throughput (bps)');
-title('Average user throughput'); grid on;
+    figure; bar(res.throughput); xlabel('User'); ylabel('Average Throughput (bps)');
+    title(['Average user throughput - ' labels{f}]); grid on;
+end
 
